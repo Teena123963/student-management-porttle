@@ -1,0 +1,35 @@
+on:
+ push:
+   branches: [main]
+
+jobs:
+ build:
+   runs-on: ubuntu-latest
+
+   steps:
+     - name: Checkout code
+       uses: actions/checkout@v4
+
+     - name: Check Docker Version
+       run: docker --version
+
+     - name: Build Docker Image
+       run: docker build -t student-management:latest .
+
+     - name: Run Docker Container
+       run: docker run -d -p 8080:80 --name demo-cicd-container student-management:latest
+
+     - name: Test Application
+       run: |
+         sleep 5
+         curl -f http://localhost:8080 || exit 1
+
+     - name: Stop and Remove Container
+       if: always()
+       run: |
+         docker stop demo-cicd-container || true
+         docker rm demo-cicd-container || true
+
+     - name: Clean up Docker Image
+       if: always()
+       run: docker rmi demo-cicd:latest || true
